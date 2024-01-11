@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON to CSV Converter</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            font-family: 'Arial', sans-serif;
+            height: 100vh;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            height: 100%;
+        }
+
+        #leftDiv,
+        #rightDiv {
+            flex: 1;
+            height: 100%;
+            overflow: hidden;
+            border-right: 1px solid #ccc;
+            box-sizing: border-box;
+            background-color: #f5f5f5;
+        }
+
+        #leftDiv {
+            display: flex;
+            flex-direction: column;
+        }
+
+        #jsonInput {
+            flex: 1;
+            padding: 10px;
+            box-sizing: border-box;
+            resize: none;
+            border: none;
+            font-size: 14px;
+            outline: none;
+        }
+
+        #jsonInput::placeholder {
+            color: #aaa;
+        }
+
+        #rightDiv {
+            padding: 10px;
+            box-sizing: border-box;
+            overflow: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        p.error-message {
+            color: red;
+            margin: 10px 0;
+        }
+
+        #downloadLink {
+            display: none;
+            margin-top: 10px;
+            text-align: center;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        #downloadLink:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+
+<body>
+    <main>
+        <div id="leftDiv">
+            <textarea id="jsonInput" placeholder="在这里输入JSON"></textarea>
+        </div>
+        <div id="rightDiv"></div>
+    </main>
+    <a id="downloadLink" download="parsed_data.csv">下载CSV文件</a>
+
+    <script>
+        function convertJsonToTableAndCSV() {
+            var jsonInput = document.getElementById('jsonInput').value;
+            var rightDiv = document.getElementById('rightDiv');
+            var downloadLink = document.getElementById('downloadLink');
+
+            try {
+                var jsonData = JSON.parse(jsonInput);
+
+                // Generate HTML table
+                var tableHTML = '<table>';
+                tableHTML += '<tr>';
+                for (var key in jsonData[0]) {
+                    if (jsonData[0].hasOwnProperty(key)) {
+                        tableHTML += '<th>' + key + '</th>';
+                    }
+                }
+                tableHTML += '</tr>';
+
+                jsonData.forEach(function (item, index) {
+                    tableHTML += '<tr' + (index % 2 === 0 ? ' class="even"' : '') + '>';
+                    for (var key in item) {
+                        if (item.hasOwnProperty(key)) {
+                            tableHTML += '<td>' + item[key] + '</td>';
+                        }
+                    }
+                    tableHTML += '</tr>';
+                });
+
+                tableHTML += '</table>';
+
+                // Display table in the right div
+                rightDiv.innerHTML = tableHTML;
+
+                // Generate CSV content
+                var csvContent = Object.keys(jsonData[0]).join(',') + '\n';
+                jsonData.forEach(function (item) {
+                    csvContent += Object.values(item).join(',') + '\n';
+                });
+
+                // Create a Blob containing the CSV data
+                var blob = new Blob([csvContent], { type: 'text/csv' });
+
+                // Create a download link
+                var url = URL.createObjectURL(blob);
+                downloadLink.href = url;
+
+                // Enable the download link
+                downloadLink.style.display = 'block';
+            } catch (error) {
+                rightDiv.innerHTML = '<p class="error-message">无效的JSON格式</p>';
+                downloadLink.style.display = 'none';
+            }
+        }
+
+        // Add event listener to detect input changes
+        document.getElementById('jsonInput').addEventListener('input', convertJsonToTableAndCSV);
+    </script>
+</body>
+
+</html>
